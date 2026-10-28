@@ -3,7 +3,7 @@
 #!author = 怎么肥事 walala
 #!update = 2025-11-01
 #!loon_version = 3.2.1(730)
-#!mitm = %APPEND% api.pinduoduo.com
+#!mitm = %APPEND% api.pinduoduo.com, m.pinduoduo.net
 
 [Rule]
 DOMAIN,sdk.1rtb.net,REJECT
