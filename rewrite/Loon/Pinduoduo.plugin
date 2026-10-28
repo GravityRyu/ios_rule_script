@@ -4,6 +4,9 @@
 #!update = 2025-11-01
 #!loon_version = 3.2.1(730)
 
+[Mitm]
+hostname = api.pinduoduo.com, m.pinduoduo.net
+
 [Rule]
 DOMAIN,sdk.1rtb.net,REJECT
 DOMAIN,titan.pinduoduo.com,REJECT
@@ -39,6 +42,3 @@ IP-CIDR,183.194.214.14/32,REJECT,no-resolve
 ^https:\/\/api\.pinduoduo\.com\/api\/manufacturer\/cross\/shortcut\/list reject-dict
 ^https:\/\/api\.pinduoduo\.com\/api\/dunkirk\/liveactivity\/push\/create\/url\/report reject-dict
 ^https:\/\/api\.pinduoduo\.com\/api\/growth\/nagato\/app\/index\/gather reject-dict
-
-[Mitm]
-hostname = api.pinduoduo.com, m.pinduoduo.net
