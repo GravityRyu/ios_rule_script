@@ -84,7 +84,8 @@
   function isTargetImage(value) {
     if (typeof value !== "string") return false;
     return /^https?:\/\/p0\.meituan\.net\/aixiaotuan\/759944e1d23af9c12fd2be85af8d7b6125132\.(?:png(?:\.webp)?|webp)(?:@[^/?#]*)?(?:\?[^#]*)?$/.test(value) ||
-      /^https?:\/\/p1\.meituan\.net\/monitorimage\/3ff407cd7478df1cdee7e646de094abe232932\.(?:png(?:\.webp)?|webp)(?:@[^/?#]*)?(?:\?[^#]*)?$/.test(value);
+      /^https?:\/\/p1\.meituan\.net\/monitorimage\/3ff407cd7478df1cdee7e646de094abe232932\.(?:png(?:\.webp)?|webp)(?:@[^/?#]*)?(?:\?[^#]*)?$/.test(value) ||
+      /^https?:\/\/p0\.meituan\.net\/linglong\/(?:0021570faa939f1f079b2e0cb54497574565|90d2e0abc1d6295bd3190f16faef26066070)\.(?:png(?:\.webp)?|webp)(?:@[^/?#]*)?(?:\?[^#]*)?$/.test(value);
   }
   function clearArray(object, key) {
     if (isObject(object) && Array.isArray(object[key]) && object[key].length) object[key] = [];

@@ -100,7 +100,7 @@ check("plugin routes all eight intended endpoints to the bundled fork script", (
   assert.equal(rules.length, 8);
   for (const url of [tabsURL, mineURL, defaultURL, hotURL, "https://feedguess.meituan.com/lycoris/scene/personalcenter_2154", "https://assistify.meituan.com/assistant/getAppClientHornConfig", "https://mop.meituan.com/mop/entry/shoppingCartEntry", "https://mop.meituan.com/api/entryModule/startupPicture"]) assert(rules.some(rule => rule.test(url)));
   for (const url of [tabsURL + "Extra", defaultURL + "Extra", mineURL + "/pay"]) assert(!rules.some(rule => rule.test(url)));
-  assert.deepEqual([...plugin.matchAll(/script-path=([^, ]+)/g)].map(match => match[1]), Array(8).fill("https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2"));
+  assert.deepEqual([...plugin.matchAll(/script-path=([^, ]+)/g)].map(match => match[1]), Array(8).fill("https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-3"));
 });
 check("all eight plugin routes agree with script across query and slash forms", () => {
   const cases = [
@@ -132,9 +132,11 @@ check("malformed wallet sections pass through safely", () => {
 const imageRules = plugin.split("\n").filter(line => line.endsWith(" reject-img")).map(line => new RegExp(line.split(" ")[0]));
 const xiaotuanImage = "https://p0.meituan.net/aixiaotuan/759944e1d23af9c12fd2be85af8d7b6125132";
 const monitorImage = "https://p1.meituan.net/monitorimage/3ff407cd7478df1cdee7e646de094abe232932";
-check("two exact asset rules match PNG, WebP, size and query variants", () => {
-  assert.equal(imageRules.length, 2);
-  for (const base of [xiaotuanImage, monitorImage]) {
+const tabNormalImage = "https://p0.meituan.net/linglong/0021570faa939f1f079b2e0cb54497574565";
+const tabSelectedImage = "https://p0.meituan.net/linglong/90d2e0abc1d6295bd3190f16faef26066070";
+check("four exact asset rules match PNG, WebP, size and query variants", () => {
+  assert.equal(imageRules.length, 4);
+  for (const base of [xiaotuanImage, monitorImage, tabNormalImage, tabSelectedImage]) {
     for (const suffix of [".png", ".webp", ".png.webp", ".png.webp@1284w_1l", ".png@84w_84h_1e_1l.webp", ".png?format=webp", ".png.webp@1284w_1l?cache=1"]) {
       const url = base + suffix;
       assert(imageRules.some(rule => rule.test(url)), url);
@@ -156,6 +158,10 @@ check("other assets, hosts, directories and suffixes remain untouched", () => {
     monitorImage.replace("/monitorimage/", "/other/") + ".png",
     xiaotuanImage + ".png/other",
     monitorImage + ".png.extra",
+    tabNormalImage.replace("0021570f", "0021570e") + ".png",
+    tabSelectedImage.replace("90d2e0ab", "90d2e0ac") + ".webp",
+    tabNormalImage.replace("p0.", "p1.") + ".png",
+    tabSelectedImage.replace("/linglong/", "/aixiaotuan/") + ".png",
     xiaotuanImage + "0.png",
     "https://example.com/?image=" + xiaotuanImage + ".png",
     xiaotuanImage.replace("p0.meituan.net", "p0.meituan.net.example.com") + ".png"
@@ -179,5 +185,31 @@ check("both image hosts are available to MITM without wildcard image blocking", 
   assert(mitm.includes("p1.meituan.net"));
   assert(!mitm.includes("*.meituan.net"));
 });
-console.log(`${tests} synthetic checks passed`);
+check("real client navigation fixture removes Xiaotuan and keeps normal tabs", () => {
+  const input = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures/indexTab-client.json"), "utf8"));
+  assert.deepEqual(input.data.resource.tabArea.map(tab => tab.tabName), ["homepage", "video", "xiaotuan", "shoppingcart", "mine"]);
+  assert.deepEqual(cleaned(tabsURL, input).data.resource.tabArea.map(tab => tab.tabName), ["homepage", "shoppingcart", "mine"]);
+  const renamed = JSON.parse(JSON.stringify(input));
+  renamed.data.resource.tabArea.find(tab => tab.tabName === "xiaotuan").tabName = "new-ai-name";
+  assert.deepEqual(cleaned(tabsURL, renamed).data.resource.tabArea.map(tab => tab.tabName), ["homepage", "shoppingcart", "mine"]);
+});
+const mockLines = plugin.split("\n").filter(line => line.includes("response.body.mock("));
+assert.equal(mockLines.length, 1);
+const mockParts = mockLines[0].match(/^response if \$\{request\.method\} == "([A-Z]+)" && \$\{url\} ~= (\/.+\/) then response\.body\.mock\("json", `([^`]+)`, 200\)$/);
+assert(mockParts, "documented Loon mock syntax");
+const mockMethod = mockParts[1];
+const mockURL = new RegExp(mockParts[2].slice(1, -1));
+const mockBody = JSON.parse(mockParts[3]);
+check("defaultword GET mock uses the actual successful empty response schema", () => {
+  assert.deepEqual(mockBody, { searchIntroduceResponse: { HotWordInfos: [], globalId: "" } });
+  assert.equal(mockMethod, "GET");
+  assert(!mockLines[0].includes("${response."), "mock does not wait for upstream response fields");
+  for (const suffix of ["", "?version_name=12.68.201", "/", "/?client=iphone"]) assert(mockURL.test(defaultURL + suffix));
+  assert.equal(run(defaultURL, mockBody).changed, false);
+});
+check("defaultword mock leaves typed search, orders, payment and other methods untouched", () => {
+  for (const url of [defaultURL + "Extra", defaultURL + "/pay", base + "/aggroup/homepage/display", base + "/group/v3/poi/search/1/ios", base + "/group/v1/deal/search", base + "/orders", "https://npay.meituan.com/pay", "https://example.com/?url=" + defaultURL]) assert(!mockURL.test(url), url);
+  for (const method of ["POST", "PUT", "DELETE", "PATCH", "HEAD"]) assert.notEqual(method, mockMethod);
+});
+console.log(`${tests} checks passed`);
 module.exports = { run, source, rules };

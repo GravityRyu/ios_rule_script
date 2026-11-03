@@ -1,0 +1,33 @@
+{
+  "data": {
+    "resource": {
+      "tabArea": [
+        {
+          "tabName": "homepage",
+          "imgUrl": "https://p0.meituan.net/linglong/c7195bc8fcb3be5a9146eddbe4a5b53f614.png",
+          "selectedImage": "https://p0.meituan.net/linglong/4a96fddd8e0c9dd71c8a841503d6cfb1818.png"
+        },
+        {
+          "tabName": "video",
+          "imgUrl": "https://p0.meituan.net/linglong/b91c29eab37e0f1c6f952297a1f2752d716.png",
+          "selectedImage": "https://p0.meituan.net/linglong/c2d09ba7724f36f820ab90aafc459a0a899.png"
+        },
+        {
+          "tabName": "xiaotuan",
+          "imgUrl": "https://p0.meituan.net/linglong/0021570faa939f1f079b2e0cb54497574565.png",
+          "selectedImage": "https://p0.meituan.net/linglong/90d2e0abc1d6295bd3190f16faef26066070.png"
+        },
+        {
+          "tabName": "shoppingcart",
+          "imgUrl": "https://p0.meituan.net/linglong/b96daa804a090f3f0d071eae21bf9c27631.png",
+          "selectedImage": "https://p0.meituan.net/linglong/533c51e6241dfa44a725cc5450805d05766.png"
+        },
+        {
+          "tabName": "mine",
+          "imgUrl": "https://p0.meituan.net/linglong/096f1d5c43eb1802af97d929c1b6ae3f680.png",
+          "selectedImage": "https://p1.meituan.net/linglong/446887b518c25219e2638360f95551a0773.png"
+        }
+      ]
+    }
+  }
+}
