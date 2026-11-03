@@ -1,5 +1,5 @@
 #!name=美团 App 净化（Loon）
-#!desc=适配原版美团 App 12.67.403 规则；需 Loon build 1008 或更新版本。需开启复写、脚本和 MITM，并安装信任 Loon CA 证书。保留 TG@ZenMoFiShi 原规则行为，修正底栏与搜索气泡处理，并隐藏我的钱包卡片。候选修订尚需新版 App 真机验证。
+#!desc=基于美团 App 12.67.403 原规则；需 Loon build 1008 或更新版本。需开启复写、脚本和 MITM，并安装信任 Loon CA 证书。保留原过滤与钱包卡片隐藏，补充两个已确认小团图标的精确图片替换和底栏识别。图片替换不能保证删除入口，12.68.201 搜索推荐尚未解决，需真机验证。
 #!author=TG@ZenMoFiShi（原作者）
 #!homepage=https://github.com/GravityRyu/ios_rule_script/tree/master/rewrite/Loon/MT
 #!date=2026-11-03
@@ -9,6 +9,7 @@
 # Original update: 2026.10.25
 # Converted from Quantumult X syntax to Loon plugin syntax.
 # Modified 2026-11-03: independent response cleaner, tab/search fixes, wallet card removal.
+# Modified 2026-11-03: match two confirmed Xiaotuan assets without blocking other images.
 # Response scripts are maintained alongside this plugin in the same repository.
 
 [Rule]
@@ -62,16 +63,18 @@ IP-CIDR6,2402:4e00:40:40::2:373/128,REJECT,no-resolve
 [Rewrite]
 ^https?:\/\/(httpdns|httpdnsvip|httpdnsmultiapi|httpdnsmultiapivip)\.meituan\.com\/ reject
 ^http:\/\/103\.37\.155\.60\/fetch reject
+^https?:\/\/p0\.meituan\.net\/aixiaotuan\/759944e1d23af9c12fd2be85af8d7b6125132\.(?:png(?:\.webp)?|webp)(?:@[^/?#]*)?(?:\?[^#]*)?$ reject-img
+^https?:\/\/p1\.meituan\.net\/monitorimage\/3ff407cd7478df1cdee7e646de094abe232932\.(?:png(?:\.webp)?|webp)(?:@[^/?#]*)?(?:\?[^#]*)?$ reject-img
 
 [Script]
-http-response ^https?:\/\/apimobile\.meituan\.com\/aggroup\/indexTab/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js, requires-body=true, timeout=10, tag=美团响应处理1
-http-response ^https?:\/\/feedguess\.meituan\.com\/lycoris\/scene\/(gwc_feed1_2265|personalcenter_2154)/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js, requires-body=true, timeout=10, tag=美团响应处理2
-http-response ^https?:\/\/mt-personalcenter\.meituan\.com\/usercenter\/display/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js, requires-body=true, timeout=10, tag=美团响应处理3
-http-response ^https?:\/\/apimobile\.meituan\.com\/group\/v1\/deal\/searchpage\/defaultword/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js, requires-body=true, timeout=10, tag=美团响应处理4
-http-response ^https?:\/\/apimobile\.meituan\.com\/group\/v1\/deal\/searchpage\/hotword\/city\/divide\/hotrecommend(\/[^?]*)?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js, requires-body=true, timeout=10, tag=美团响应处理5
-http-response ^https?:\/\/assistify\.meituan\.com\/assistant\/getAppClientHornConfig/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js, requires-body=true, timeout=10, tag=美团响应处理6
-http-response ^https?:\/\/mop\.meituan\.com\/mop\/entry\/shoppingCartEntry/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js, requires-body=true, timeout=10, tag=美团响应处理7
-http-response ^https?:\/\/mop\.meituan\.com\/api\/entryModule\/startupPicture/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js, requires-body=true, timeout=10, tag=美团响应处理8
+http-response ^https?:\/\/apimobile\.meituan\.com\/aggroup\/indexTab/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2, requires-body=true, timeout=10, tag=美团响应处理1
+http-response ^https?:\/\/feedguess\.meituan\.com\/lycoris\/scene\/(gwc_feed1_2265|personalcenter_2154)/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2, requires-body=true, timeout=10, tag=美团响应处理2
+http-response ^https?:\/\/mt-personalcenter\.meituan\.com\/usercenter\/display/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2, requires-body=true, timeout=10, tag=美团响应处理3
+http-response ^https?:\/\/apimobile\.meituan\.com\/group\/v1\/deal\/searchpage\/defaultword/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2, requires-body=true, timeout=10, tag=美团响应处理4
+http-response ^https?:\/\/apimobile\.meituan\.com\/group\/v1\/deal\/searchpage\/hotword\/city\/divide\/hotrecommend(\/[^?]*)?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2, requires-body=true, timeout=10, tag=美团响应处理5
+http-response ^https?:\/\/assistify\.meituan\.com\/assistant\/getAppClientHornConfig/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2, requires-body=true, timeout=10, tag=美团响应处理6
+http-response ^https?:\/\/mop\.meituan\.com\/mop\/entry\/shoppingCartEntry/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2, requires-body=true, timeout=10, tag=美团响应处理7
+http-response ^https?:\/\/mop\.meituan\.com\/api\/entryModule\/startupPicture/?(\?|$) script-path=https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2, requires-body=true, timeout=10, tag=美团响应处理8
 
 [MITM]
-hostname = apimobile.meituan.com, feedguess.meituan.com, mop.meituan.com, mt-personalcenter.meituan.com, assistify.meituan.com, httpdns.meituan.com, httpdnsmultiapi.meituan.com
+hostname = apimobile.meituan.com, feedguess.meituan.com, mop.meituan.com, mt-personalcenter.meituan.com, assistify.meituan.com, httpdns.meituan.com, httpdnsmultiapi.meituan.com, p0.meituan.net, p1.meituan.net

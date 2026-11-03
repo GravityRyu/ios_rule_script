@@ -100,7 +100,7 @@ check("plugin routes all eight intended endpoints to the bundled fork script", (
   assert.equal(rules.length, 8);
   for (const url of [tabsURL, mineURL, defaultURL, hotURL, "https://feedguess.meituan.com/lycoris/scene/personalcenter_2154", "https://assistify.meituan.com/assistant/getAppClientHornConfig", "https://mop.meituan.com/mop/entry/shoppingCartEntry", "https://mop.meituan.com/api/entryModule/startupPicture"]) assert(rules.some(rule => rule.test(url)));
   for (const url of [tabsURL + "Extra", defaultURL + "Extra", mineURL + "/pay"]) assert(!rules.some(rule => rule.test(url)));
-  assert.equal((plugin.match(/script-path=https:\/\/raw\.githubusercontent\.com\/GravityRyu\/ios_rule_script\/master\/rewrite\/Loon\/MT\/MT\.js/g) || []).length, 8);
+  assert.deepEqual([...plugin.matchAll(/script-path=([^, ]+)/g)].map(match => match[1]), Array(8).fill("https://raw.githubusercontent.com/GravityRyu/ios_rule_script/master/rewrite/Loon/MT/MT.js?v=20261103-2"));
 });
 check("all eight plugin routes agree with script across query and slash forms", () => {
   const cases = [
@@ -128,6 +128,56 @@ check("all eight plugin routes agree with script across query and slash forms", 
 });
 check("malformed wallet sections pass through safely", () => {
   for (const input of [{ children: null }, { children: {} }, { children: [null, 1, {}, { name: "mine_serviceV3" }] }]) assert.equal(run(mineURL, input).changed, false);
+});
+const imageRules = plugin.split("\n").filter(line => line.endsWith(" reject-img")).map(line => new RegExp(line.split(" ")[0]));
+const xiaotuanImage = "https://p0.meituan.net/aixiaotuan/759944e1d23af9c12fd2be85af8d7b6125132";
+const monitorImage = "https://p1.meituan.net/monitorimage/3ff407cd7478df1cdee7e646de094abe232932";
+check("two exact asset rules match PNG, WebP, size and query variants", () => {
+  assert.equal(imageRules.length, 2);
+  for (const base of [xiaotuanImage, monitorImage]) {
+    for (const suffix of [".png", ".webp", ".png.webp", ".png.webp@1284w_1l", ".png@84w_84h_1e_1l.webp", ".png?format=webp", ".png.webp@1284w_1l?cache=1"]) {
+      const url = base + suffix;
+      assert(imageRules.some(rule => rule.test(url)), url);
+      assert(imageRules.some(rule => rule.test(url.replace("https://", "http://"))));
+      for (const field of ["imgUrl", "selectedImage"]) {
+        const input = { data: { resource: { tabArea: [{ tabName: "homepage" }, { tabName: "renamed-ai", [field]: url }, { tabName: "mine" }] } } };
+        assert.deepEqual(cleaned(tabsURL, input).data.resource.tabArea.map(tab => tab.tabName), ["homepage", "mine"]);
+      }
+    }
+  }
+});
+check("other assets, hosts, directories and suffixes remain untouched", () => {
+  for (const url of [
+    xiaotuanImage.replace("759944e1", "759944e2") + ".png",
+    monitorImage.replace("3ff407cd", "3ff407ce") + ".png",
+    xiaotuanImage.replace("p0.", "p1.") + ".png",
+    monitorImage.replace("p1.", "p0.") + ".png",
+    xiaotuanImage.replace("/aixiaotuan/", "/linglong/") + ".png",
+    monitorImage.replace("/monitorimage/", "/other/") + ".png",
+    xiaotuanImage + ".png/other",
+    monitorImage + ".png.extra",
+    xiaotuanImage + "0.png",
+    "https://example.com/?image=" + xiaotuanImage + ".png",
+    xiaotuanImage.replace("p0.meituan.net", "p0.meituan.net.example.com") + ".png"
+  ]) {
+    assert(!imageRules.some(rule => rule.test(url)), url);
+    const input = { data: { resource: { tabArea: [{ tabName: "homepage" }, { tabName: "other", imgUrl: url, selectedImage: url }] } } };
+    assert.equal(run(tabsURL, input).changed, false, url);
+  }
+});
+check("asset detection stays inside known tab fields and never empties navigation", () => {
+  const image = xiaotuanImage + ".png.webp@1284w_1l";
+  const single = { data: { resource: { tabArea: [{ tabName: "renamed-ai", imgUrl: image }] } } };
+  assert.equal(run(tabsURL, single).changed, false);
+  const input = { data: { resource: { tabArea: [{ tabName: "homepage" }, { tabName: "other", nested: { imgUrl: image }, target: image }] }, imgUrl: image } };
+  assert.equal(run(tabsURL, input).changed, false);
+  assert.equal(run("https://npay.meituan.com/pay", { imgUrl: image }).changed, false);
+});
+check("both image hosts are available to MITM without wildcard image blocking", () => {
+  const mitm = plugin.split("\n").find(line => line.startsWith("hostname = ")).split(" = ")[1].split(", ");
+  assert(mitm.includes("p0.meituan.net"));
+  assert(mitm.includes("p1.meituan.net"));
+  assert(!mitm.includes("*.meituan.net"));
 });
 console.log(`${tests} synthetic checks passed`);
 module.exports = { run, source, rules };

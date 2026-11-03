@@ -20,7 +20,10 @@
     if (route === "apimobile.meituan.com/aggroup/indexTab") {
       const resource = data.data && data.data.resource;
       if (isObject(resource) && Array.isArray(resource.tabArea)) {
-        const tabs = resource.tabArea.filter(tab => !isObject(tab) || !["video", "xiaotuan"].includes(tab.tabName));
+        const tabs = resource.tabArea.filter(tab => !isObject(tab) || !(
+          ["video", "xiaotuan"].includes(tab.tabName) ||
+          isTargetImage(tab.imgUrl) || isTargetImage(tab.selectedImage)
+        ));
         // Do not replace the navigation with an empty list.
         if (tabs.length) resource.tabArea = tabs;
       }
@@ -77,6 +80,11 @@
 
   function isObject(value) {
     return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+  function isTargetImage(value) {
+    if (typeof value !== "string") return false;
+    return /^https?:\/\/p0\.meituan\.net\/aixiaotuan\/759944e1d23af9c12fd2be85af8d7b6125132\.(?:png(?:\.webp)?|webp)(?:@[^/?#]*)?(?:\?[^#]*)?$/.test(value) ||
+      /^https?:\/\/p1\.meituan\.net\/monitorimage\/3ff407cd7478df1cdee7e646de094abe232932\.(?:png(?:\.webp)?|webp)(?:@[^/?#]*)?(?:\?[^#]*)?$/.test(value);
   }
   function clearArray(object, key) {
     if (isObject(object) && Array.isArray(object[key]) && object[key].length) object[key] = [];
